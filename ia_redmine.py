@@ -15,6 +15,43 @@ def create_redmine_issue(username,password,redmine_url,project_id,issue_subject,
     redmine = Redmine(redmine_url,username=username,password=password)
     redmine.issue.create(project_id=project_id,subject=issue_subject,description=issue_subject,assigned_to_id=assign_to)
 
+def download_redmine_file(username,password,redmine_url, file_url,dest_path,file_name=None):
+    """username->(String) redmine username
+       password->(String) redmine password
+       redmine_url->(String) redmine server url
+       file_url->(Stirng) url of file
+       dest_path->(Stirng) local path for file to be downloaded to
+       (OPT)file_name->(String) filename for the file to be downloaded to
+        """
+
+    redmine = Redmine(redmine_url,username=username,password=password)
+    redmine.Redmine.download(file_url,savepath=dest_path,filename=file_name)
+
+def get_assigned_tickets(username,password,redmine_url,project_id):
+    """username->(Stirng) redmine username
+       password->(String) redmine password
+       redmine_url->(String) redmine server url
+       project_id->(Stirng) id of project to get tickets for
+
+       returns a list of all the tickets currently assigned to the user"""
+
+    redmine = Redmine(redmine_url,username=username,password=password) # connect to redmine
+    proj = redmine.project.get(project_id)
+    issue_list = []
+    for issue in proj.issues:
+        if(issue.status.__str__() == "Assigned"):
+            issue_list.append(issue)
+    return(issue_list)
+
+def download_all_files(username,password,redmine_url,issues,savepath):
+    """i have issues"""
+
+    redmine = Redmine(redmine_url,username=username,password=password) # connect to redmine
+
+    for issue in issues:
+        for f in issue.attachments:
+            redmine.download(f['content_url'],savepath=savepath)
+        redmine.update(issue.resource_id,status_id=2)
 
 if __name__ == "__main__":
 
@@ -24,17 +61,18 @@ if __name__ == "__main__":
     username = input("username:") # Redmine user info
     password = input("password:")
     redmine_url = "https://digitalscholarship.utsc.utoronto.ca/redmine" # Location of redmine 
-
+    
     redmine = Redmine(redmine_url,username=username,password=password) # connect to redmine
     redmine.auth()
-    test_proj = redmine.project.get('test-project-kim3')
+    test_proj = redmine.project.get('kim-pham')
 
+    print(get_assigned_tickets(username,password,redmine_url,'kim-pham'))
 #    print(test_proj)
 
-    create_redmine_issue(username,password,redmine_url,'test-project-kim2',"TEST SUBJECT", "TEST DESCRIPTION")
+#    create_redmine_issue(username,password,redmine_url,'test-project-kim2',"TEST SUBJECT", "TEST DESCRIPTION")
 
-    projects = redmine.project.all()
-    for proj in projects:
-        print(proj.name)
-        print(proj.identifier)
+#    projects = redmine.project.all()
+#    for proj in projects:
+#        print(proj.name)
+#        print(proj.identifier)
 
