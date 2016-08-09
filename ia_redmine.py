@@ -27,11 +27,12 @@ def download_redmine_file(username,password,redmine_url, file_url,dest_path,file
     redmine = Redmine(redmine_url,username=username,password=password)
     redmine.Redmine.download(file_url,savepath=dest_path,filename=file_name)
 
-def get_assigned_tickets(username,password,redmine_url,project_id):
+def get_assigned_tickets(username,password,redmine_url,project_id,assignee):
     """username->(Stirng) redmine username
        password->(String) redmine password
        redmine_url->(String) redmine server url
        project_id->(Stirng) id of project to get tickets for
+       assignee->(String) name of assignee as appears on redmine (not the username)
 
        returns a list of all the tickets currently assigned to the user"""
 
@@ -39,19 +40,50 @@ def get_assigned_tickets(username,password,redmine_url,project_id):
     proj = redmine.project.get(project_id)
     issue_list = []
     for issue in proj.issues:
-        if(issue.status.__str__() == "Assigned"):
+        if(issue.assigned_to['name'] == assignee and issue.status.__str__() == "Assigned"):
             issue_list.append(issue)
     return(issue_list)
 
 def download_all_files(username,password,redmine_url,issues,savepath):
-    """i have issues"""
+    """username->(String) redmine username
+       password->(String) redmine password
+       redmine_url->(String) server address for redmine
+       issues->(list (redmine.issue)) list of redmine issues to download files from
+       savepath->(String) path to save the files to
+       
+       downloads all of the files in each issue provided to the given path"""
 
     redmine = Redmine(redmine_url,username=username,password=password) # connect to redmine
 
     for issue in issues:
         for f in issue.attachments:
             redmine.download(f['content_url'],savepath=savepath)
-        redmine.update(issue.resource_id,status_id=2)
+
+def update_tickets(username,password,redmine_url,issues,statusid):
+    """username->(String) redmine username
+       password->(String) redmine password
+       redmine_url->(String) server address for redmine
+       issues->(list(redmine.issue)) list of redmine issues to change the status of
+       statusid->(int) status id to change the ticket to 
+       
+       Change the status of the given issues to the provided statusid
+       
+       statusid new == 1
+       statusid in progress == 2
+       statusid resolved == 3
+       statusid feedback == 4
+       statusid closed == 5
+       statusid rejected == 6
+       Statusid assigned == 7
+       statusid Re-opened == 8
+
+       """
+
+    redmine = Redmine(redmine_url,username=username,password=password) # connect to redmine
+
+    for issue in issues:
+        redmine.issue.update(issue.id,status_id=statusid)
+
 
 if __name__ == "__main__":
 
@@ -66,7 +98,10 @@ if __name__ == "__main__":
     redmine.auth()
     test_proj = redmine.project.get('kim-pham')
 
-    print(get_assigned_tickets(username,password,redmine_url,'kim-pham'))
+    tickets = get_assigned_tickets(username,password,redmine_url,'kim-pham',"Caden Armstrong")
+#download_all_files(username,password,redmine_url,tickets,"/Users/armst179/workspace/internetarchive_scripts/TOC/")
+#    update_tickets(username,password,redmine_url,tickets,1)
+
 #    print(test_proj)
 
 #    create_redmine_issue(username,password,redmine_url,'test-project-kim2',"TEST SUBJECT", "TEST DESCRIPTION")

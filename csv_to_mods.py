@@ -93,6 +93,7 @@ def csv_row_to_mods(csv_row,csv_defs,dest):
     state.text = meta['state']
     region = SubElement(hierarchicalgeographic,'region') #TODO blank?
     county = SubElement(hierarchicalgeographic,'county') #TODO blank?
+    county.text = meta['county'] 
     city = SubElement(hierarchicalgeographic,'city') #TODO blank?
     city.text = meta['city'] 
     citysection= SubElement(hierarchicalgeographic,'citySection') #TODO blank?
