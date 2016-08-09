@@ -44,6 +44,15 @@ def get_scandata(path):
 
     return glob.glob(path+"/*scandata.xml")[0]
 
+def move_toc(start,finish):
+    """start->(String) path to starting directory with TOC files to move out
+       finish->(String) path to put TOC files in
+
+       move all of the TOC files from a folder to another fold"""
+
+       for f in glob.glob(start+"*TOC*"):
+           move_file(f,finish+f.split("/")[-1])
+
 def create_dest_folders(name,range_start,range_end,padding):
     """name->(String) full path of folders to create minus the numbering
        range_start->(int) first number in folder naming range
@@ -77,7 +86,7 @@ def create_mods_file(xmltree,folder):
     else:
         xmltree.write(folder+"/MODS.xml")
 
-def make_folder_into_compound(folder,destination,scandata,toc,ext=".jp2"):
+def make_folder_into_compound(folder,destination,scandata,toc,metapath,ext=".jp2"):
     """folder->(String) path to folder containing files to make into compounds
        destination->(String) path to folder where compounds will be made
        scandata->(String) path to scandata file containing leaf nums and menu splitting
@@ -148,7 +157,7 @@ def generate_mods(metapath,identifier,dest):
 
        generate a MODS.xml file from a csv meta data file for a given identifier"""
 
-    files = glob.glob(metapath+"*.xml") # Get list of files in the directory given
+    files = glob.glob(metapath+"*.csv") # Get list of files in the directory given
     for f in files: # lets look at the all the files
         key = []
         reader = csv.reader(codecs.open(f,encoding="utf-8"))
@@ -166,7 +175,7 @@ def get_toc(path,boxid):
        returns list of identifiers for the given box""" 
     
     toc = []
-    with open(path+"/"+boxid+".txt") as f:
+    with open(path+"/"+boxid+"_TOC.txt") as f:
         for line in f:
             toc.append(line.rstrip("\n"))
     return toc

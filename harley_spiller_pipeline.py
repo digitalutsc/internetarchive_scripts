@@ -14,6 +14,20 @@ import sys
 downloaded_path = "testarchive/harley_spiller_downloaded/"
 preprocess_path = "testarchive/harley_spiller_preprocess/"
 processed_path = "testarchive/harley_spiller_processed/"
+tocpath = "TOC/"
+meta_data_path = "metadata/"
+
+# **************************
+# Download new files from redmine
+# **************************
+redmine_url = "https://digitalscholarship.utsc.utoronto.ca/redmine/"
+project_id = "kim-pham"
+redmine_name = "Redmine Robot"
+
+tickets = ia_redmine.get_assigned_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,'kim-pham',"Caden Armstrong")
+ia_redmine.download_all_files(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,tickets,meta_data_path)
+ia_redmine.update_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,tickets,2) # Change to in progress
+ia_split.move_toc(meta_data_path,tocpath)
 
 # **************************
 # CHECK FOR NEW COLLECTIONS
@@ -46,28 +60,27 @@ for col in new_collections:
 # UNTAR the jp2 archive
 # **************************
 
-tocfile = "_scandata.xml" 
+scandatafile = "_scandata.xml" 
 
 ia_split.new_folders(preprocess_path,new_collections) # New folders to uncompress into
 
 for col in new_collections:
     tarfile_name = ia_split.get_tarname(downloaded_path+"/"+col)
     ia_split.untarball(tarfile_name,preprocess_path + col)
-    ia_split.move_file(downloaded_path+"/"+col+"/"+col+tocfile,preprocess_path+"/"+col+"/"+col+tocfile)
+    ia_split.move_file(downloaded_path+"/"+col+"/"+col+scandatafile,preprocess_path+"/"+col+"/"+col+scandatafile)
 
 # **************************
 # Split the archive into multiple folders and move the jp2 files
 # Also generate the MODS files
 # **************************
 
-tocpath = "TOC/"
 
 ia_split.new_folders(processed_path,new_collections) # New folders to uncompress into
 for col in new_collections:
     toc = ia_split.get_toc(tocpath,col.split("_")[1])
     tarfile_name = ia_split.get_tarname(downloaded_path+"/"+col).split("/")[-1]
     scandata = ia_split.get_scandata(downloaded_path+"/"+col)
-    ia_split.make_folder_into_compound(preprocess_path+"/"+col+"/"+tarfile_name.rstrip(".tar"),processed_path+"/"+col,scandata,toc) 
+    ia_split.make_folder_into_compound(preprocess_path+"/"+col+"/"+tarfile_name.rstrip(".tar"),processed_path+"/"+col,scandata,toc,meta_data_path) 
 
 
 # **************************
@@ -106,9 +119,6 @@ for pid in new_objects:
 # Open redmine ticket
 # **************************
 
-redmine_url = "https://digitalscholarship.utsc.utoronto.ca/redmine/"
-#project_id = "digital-collections-working-group"
-project_id = "kim-pham"
 issue_subject = "TEST Harley-Spiller Collection new items TEST"
 assign_to = "cadenarmstrong"
 issue_description = "The following items are new and have been processed:\n"
