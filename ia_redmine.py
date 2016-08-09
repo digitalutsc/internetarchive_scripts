@@ -34,13 +34,14 @@ def get_assigned_tickets(username,password,redmine_url,project_id,assignee):
        project_id->(Stirng) id of project to get tickets for
        assignee->(String) name of assignee as appears on redmine (not the username)
 
+       return (list(redmine.issue))
        returns a list of all the tickets currently assigned to the user"""
 
     redmine = Redmine(redmine_url,username=username,password=password) # connect to redmine
     proj = redmine.project.get(project_id)
     issue_list = []
     for issue in proj.issues:
-        if(issue.assigned_to['name'] == assignee and issue.status.__str__() == "Assigned"):
+        if(issue.assigned_to['name'] == assignee and issue.status.__str__() == "Assigned"): # Check assignee and issue status
             issue_list.append(issue)
     return(issue_list)
 

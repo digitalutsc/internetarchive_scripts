@@ -4,7 +4,35 @@ import csv
 import codecs
 
 def csv_row_to_mods(csv_row,csv_defs,dest):
-    """ Create a mods file from a csv row (already processed in lists) """
+    """csv_row->List(String) a single row read in from a csv reader
+       csv_defs->List(String) the first row from a csv file to give the dict keys
+       dest->(String) Path to folder where MODS.xml will be saved
+
+       the following keys are currently in use:
+        title
+        role
+        dateCaptured
+        dateQualifier
+        dateCreated
+        noteOnDateCreated
+        description
+        identifierLocal
+        form
+        extent
+        note
+        language
+        topic
+        continent
+        country
+        province
+        state
+        county
+        city
+        coordinates
+        source
+
+        
+        Create a mods file from a csv row (already processed in lists) """
 
     meta = dict(zip(csv_defs,csv_row))
 
