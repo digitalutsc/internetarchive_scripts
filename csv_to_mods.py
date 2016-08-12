@@ -67,7 +67,7 @@ def csv_row_to_mods(csv_row,csv_defs,dest):
     typeofresource.text = "text"
 
     genre = SubElement(mods,'genre')
-    genre.text = "textual record"
+    genre.text = "menu"
 
     origininfo = SubElement(mods,'originInfo')
     datecaptured = SubElement(origininfo,'dateCaptured')
