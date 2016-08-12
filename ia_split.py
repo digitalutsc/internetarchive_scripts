@@ -50,8 +50,8 @@ def move_toc(start,finish):
 
        move all of the TOC files from a folder to another fold"""
 
-       for f in glob.glob(start+"*TOC*"):
-           move_file(f,finish+f.split("/")[-1])
+    for f in glob.glob(start+"*TOC*"):
+        move_file(f,finish+f.split("/")[-1])
 
 def create_dest_folders(name,range_start,range_end,padding):
     """name->(String) full path of folders to create minus the numbering
@@ -105,6 +105,7 @@ def make_folder_into_compound(folder,destination,scandata,toc,metapath,ext=".jp2
     padding = len(str(len(files))) # This makes sure that they will be ordered
 
     leafNums = scandata_leafnums(scandata)
+    date = scan_date(scandata)
     
     identifiers = []
     with open(toc) as f:
@@ -117,7 +118,7 @@ def make_folder_into_compound(folder,destination,scandata,toc,metapath,ext=".jp2
 
         for b in range(0,len(folders)):
             move_file(files[leafNums[a][b]],folders[b]+"/OBJ.jp2") # Move and rename the files into their respective folder
-            modfile = generate_mods(metapath,identifier,folders[b]+"/MODS.xml")
+            modfile = generate_mods(metapath,identifier,folders[b]+"/MODS.xml",date)
         copy_file(folders[0]+"/MODS.xml",destionation+"/"+identifier+"/MODS.xml")
 
 def scandata_leafnums(scandata):
@@ -150,10 +151,11 @@ def copy_file(start,finish):
 
     shutil.copy(start,finish) 
 
-def generate_mods(metapath,identifier,dest):
+def generate_mods(metapath,identifier,dest,date):
     """metapath->(String) path to directory contating meta data files
        indentifier->(String) Identifier to be made into a mod file
        dest->(String) Destination path of folder for MODS.xml file to be put into
+       date->(String) Scan date for batch
 
        generate a MODS.xml file from a csv meta data file for a given identifier"""
 
@@ -166,7 +168,7 @@ def generate_mods(metapath,identifier,dest):
                 key = row
             else:
                 if(identifier in row):
-                    csv_to_mods.csv_row_to_mods(row,key,dest)
+                    csv_to_mods.csv_row_to_mods(row,key,dest,date)
 
 def get_toc(path,boxid):
     """path->(String) path to directory containing table of contents
@@ -180,6 +182,21 @@ def get_toc(path,boxid):
             toc.append(line.rstrip("\n"))
     return toc
 
+def scan_date(scandata):
+    """scandata->(String) path to scandata file
+
+       YYYY-MM-DD
+       returns a string of the date from the scandata file"""
+
+
+    tree = ET.parse(scandata)
+    root = tree.getroot()
+    tmp = []
+    for item in root.iter('scanLog'): 
+        scanevent = item.find("scanEvent")
+        endTimeStamp = scanevent.find("endTimeStamp")
+        date = endTimeStamp.text
+        return("%s-%s-%s"%(date[:4],date[4:6],date[6:8]))
 
 if __name__ == "__main__":
     
@@ -200,7 +217,8 @@ if __name__ == "__main__":
 
 #print(find_mods("MODS/",""))
 
-    print scandata_leafnums("spiller_006-1-4-3-21_scandata.xml")
+#print scandata_leafnums("spiller_006-1-4-3-21_scandata.xml")
+    print(scan_date("spiller_006-1-4-3-21_scandata.xml"))
 
     pass
     

@@ -3,10 +3,11 @@ from xml.etree.ElementTree import SubElement, Element
 import csv
 import codecs
 
-def csv_row_to_mods(csv_row,csv_defs,dest):
+def csv_row_to_mods(csv_row,csv_defs,dest,date):
     """csv_row->List(String) a single row read in from a csv reader
        csv_defs->List(String) the first row from a csv file to give the dict keys
        dest->(String) Path to folder where MODS.xml will be saved
+       date->(Stirng) DateCaptured YYYY-MM-DD from scandata
 
        the following keys are currently in use:
         title
@@ -71,7 +72,7 @@ def csv_row_to_mods(csv_row,csv_defs,dest):
 
     origininfo = SubElement(mods,'originInfo')
     datecaptured = SubElement(origininfo,'dateCaptured')
-    datecaptured.text = meta['dateCaptured']
+    datecaptured.text = date
     datecreated = SubElement(origininfo, 'dateCreated')
     datecreated.attrib['qualifier'] = meta['dateQualifier']
     datecreated.text = meta['dateCreated']
