@@ -60,7 +60,7 @@ def csv_row_to_mods(csv_row,csv_defs,dest,date):
 
     role = SubElement(name,'role')
     rolepart = SubElement(role,'roleTerm')
-    rolepart.text = meta['role']
+#    rolepart.text = meta['role']
     rolepart.attrib['authority'] = "marcrelator"
     rolepart.attrib['type'] = "text"
 
@@ -79,7 +79,7 @@ def csv_row_to_mods(csv_row,csv_defs,dest,date):
 
     datenote = SubElement(mods,'note')
     datenote.attrib['ID'] = "datenote"
-    datenote.text = meta['noteOnDateCreated']
+    datenote.text = meta['dateNote']
 
     description = SubElement(mods,'abstract')
     description.text = meta['description']
@@ -92,12 +92,12 @@ def csv_row_to_mods(csv_row,csv_defs,dest,date):
     physicaldesc = SubElement(mods,'physicalDescription')
     form = SubElement(physicaldesc,'form')
     form.attrib['authority'] = "marcform"
-    form.text = meta['form']
+#   form.text = meta['form']
     extent = SubElement(physicaldesc,'extent')
     extent.text = meta['extent']
 
     note = SubElement(mods,'note')
-    note.text = meta['note']
+#   note.text = meta['note']
 
     language = SubElement(mods,'language')
     languageterm = SubElement(mods,'languageTerm')
@@ -119,12 +119,12 @@ def csv_row_to_mods(csv_row,csv_defs,dest,date):
     province = SubElement(hierarchicalgeographic,'province')
     province.text = meta['province']
     state = SubElement(hierarchicalgeographic,'state')
-    state.text = meta['state']
+#    state.text = meta['state']
     region = SubElement(hierarchicalgeographic,'region') #TODO blank?
     county = SubElement(hierarchicalgeographic,'county') #TODO blank?
-    county.text = meta['county'] 
+#    county.text = meta['county'] 
     city = SubElement(hierarchicalgeographic,'city') #TODO blank?
-    city.text = meta['city'] 
+#    city.text = meta['city'] 
     citysection= SubElement(hierarchicalgeographic,'citySection') #TODO blank?
     cartographics = SubElement(subject,'cartographics')
     coordinates = SubElement(cartographics,'coordinates')

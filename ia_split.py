@@ -3,6 +3,8 @@ import glob                             # To get lists of files from folders
 from subprocess import call             # To tar and untar files
 import shutil
 import csv_to_mods
+import csv
+import codecs
 
 def move_file(orig,dest):
     """ orgi->(string) path of the file to move
@@ -73,6 +75,15 @@ def create_dest_folders(name,range_start,range_end,padding):
         folders.append(name+number_format%(a))
     return folders
 
+def new_folders(dest,names):
+    """dest->(String) destination folder for the new folders to reside in
+       names->(list(string)) list of folder names to make
+
+       create a bunch of directories in dest using names"""
+
+    for name in names:
+       call(['mkdir','-p',dest+"/"+name]) 
+
 def create_mods_file(xmltree,folder):
     """xmltree->(ElementTree) modsfile element tree
        folder->(String) path to folder where MODS file will be written
@@ -108,9 +119,10 @@ def make_folder_into_compound(folder,destination,scandata,toc,metapath,ext=".jp2
     date = scan_date(scandata)
     
     identifiers = []
-    with open(toc) as f:
-        for line in f:
-            identifiers.append(line.rstrip("\n"))
+    for entry in toc:
+        if len(entry) > 1:
+            identifiers.append(entry)
+            
 
     for a in range(0,len(leafNums)):
         identifier = identifiers[a]
@@ -119,7 +131,7 @@ def make_folder_into_compound(folder,destination,scandata,toc,metapath,ext=".jp2
         for b in range(0,len(folders)):
             move_file(files[leafNums[a][b]],folders[b]+"/OBJ.jp2") # Move and rename the files into their respective folder
             modfile = generate_mods(metapath,identifier,folders[b]+"/MODS.xml",date)
-        copy_file(folders[0]+"/MODS.xml",destionation+"/"+identifier+"/MODS.xml")
+        copy_file(folders[0]+"/MODS.xml",destination+"/"+identifier+"/MODS.xml")
 
 def scandata_leafnums(scandata):
     """scandata->(String) path to scandata file 
@@ -177,6 +189,7 @@ def get_toc(path,boxid):
        returns list of identifiers for the given box""" 
     
     toc = []
+    path = path.rstrip("/")
     with open(path+"/"+boxid+"_TOC.txt") as f:
         for line in f:
             toc.append(line.rstrip("\n"))
@@ -191,7 +204,6 @@ def scan_date(scandata):
 
     tree = ET.parse(scandata)
     root = tree.getroot()
-    tmp = []
     for item in root.iter('scanLog'): 
         scanevent = item.find("scanEvent")
         endTimeStamp = scanevent.find("endTimeStamp")
