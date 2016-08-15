@@ -30,7 +30,7 @@ def untarball(tarfile, dest):
        The dest path will be created if it does not exist."""
 
     call(['mkdir','-p',dest])
-    call(['tar','-xzf',tarfile,"-C",dest])
+    call(['tar','-xvf',tarfile,"-C",dest])
 
 def get_tarname(path):
     """path->(String) directory path 
