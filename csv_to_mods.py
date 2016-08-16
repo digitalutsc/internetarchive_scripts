@@ -47,7 +47,8 @@ def csv_row_to_mods(csv_row,csv_defs,dest,date):
 
     titleinfo = SubElement(mods,'titleInfo')
     title = SubElement(titleinfo,'title')
-    title.text = meta['title']
+    if("title" in meta):
+        title.text = meta['title']
 
 
     name = SubElement(mods,'name')
@@ -60,7 +61,8 @@ def csv_row_to_mods(csv_row,csv_defs,dest,date):
 
     role = SubElement(name,'role')
     rolepart = SubElement(role,'roleTerm')
-#    rolepart.text = meta['role']
+    if("role" in meta):
+        rolepart.text = meta['role']
     rolepart.attrib['authority'] = "marcrelator"
     rolepart.attrib['type'] = "text"
 
@@ -74,61 +76,78 @@ def csv_row_to_mods(csv_row,csv_defs,dest,date):
     datecaptured = SubElement(origininfo,'dateCaptured')
     datecaptured.text = date
     datecreated = SubElement(origininfo, 'dateCreated')
-    datecreated.attrib['qualifier'] = meta['dateQualifier']
-    datecreated.text = meta['dateCreated']
+    if("dateQualifier" in meta):
+        datecreated.attrib['qualifier'] = meta['dateQualifier']
+    if("dateCreated" in meta):
+        datecreated.text = meta['dateCreated']
 
     datenote = SubElement(mods,'note')
     datenote.attrib['ID'] = "datenote"
-    datenote.text = meta['dateNote']
+    if("dateNote" in meta):
+        datenote.text = meta['dateNote']
 
     description = SubElement(mods,'abstract')
-    description.text = meta['description']
+    if("description" in meta):
+        description.text = meta['description']
 
     identifier= SubElement(mods,'identifier')
     identifier.attrib['type'] = "local"
-    identifier.text = meta['identifierLocal']
+    if("identifierLocal" in meta):
+        identifier.text = meta['identifierLocal']
 
 
     physicaldesc = SubElement(mods,'physicalDescription')
     form = SubElement(physicaldesc,'form')
     form.attrib['authority'] = "marcform"
-#   form.text = meta['form']
+    if("form" in meta):
+        form.text = meta['form']
     extent = SubElement(physicaldesc,'extent')
-    extent.text = meta['extent']
+    if("extent" in meta):
+        extent.text = meta['extent']
 
     note = SubElement(mods,'note')
-#   note.text = meta['note']
+    if("note" in meta):
+        note.text = meta['note']
 
     language = SubElement(mods,'language')
     languageterm = SubElement(mods,'languageTerm')
     languageterm.attrib['authority'] = "iso639-2b"
     languageterm.attrib['type'] = "code"
-    languageterm.text = meta['language']
+    if("language" in meta):
+        language.text = meta['language']
 
     subject = SubElement(mods,'subject')
     topic = SubElement(subject,'topic')
     topic.attrib['authority'] = "lcsh"
-    topic.text = meta['topic']
+    if("topic" in meta):
+        topic.text = meta['topic']
     geographic = SubElement(subject,'geographic') # TODO blank?
     temporal = SubElement(subject,'temporal') # TODO blank?
     hierarchicalgeographic = SubElement(subject,'hierarchicalGeographic')
     continent = SubElement(hierarchicalgeographic,'continent')
-    continent.text = meta['continent']
+    if("continent" in meta):
+        continent.text = meta['continent']
     country = SubElement(hierarchicalgeographic,'country')
-    country.text = meta['country']
+    if("country" in meta):
+        country.text = meta['country']
     province = SubElement(hierarchicalgeographic,'province')
-    province.text = meta['province']
+    if("province" in meta):
+        province.text = meta['province']
     state = SubElement(hierarchicalgeographic,'state')
-#    state.text = meta['state']
-    region = SubElement(hierarchicalgeographic,'region') #TODO blank?
-    county = SubElement(hierarchicalgeographic,'county') #TODO blank?
-#    county.text = meta['county'] 
-    city = SubElement(hierarchicalgeographic,'city') #TODO blank?
-#    city.text = meta['city'] 
-    citysection= SubElement(hierarchicalgeographic,'citySection') #TODO blank?
+    if("state" in meta):
+        state.text = meta['state']
+    region = SubElement(hierarchicalgeographic,'region') 
+    county = SubElement(hierarchicalgeographic,'county') 
+    if("county" in meta):
+        county.text = meta['county'] 
+    city = SubElement(hierarchicalgeographic,'city') 
+    if("city" in meta):
+        city.text = meta['city'] 
+    citysection= SubElement(hierarchicalgeographic,'citySection') 
     cartographics = SubElement(subject,'cartographics')
     coordinates = SubElement(cartographics,'coordinates')
-    coordinates.text = meta['coordinates']
+    if("coordinates" in meta):
+        coordinates.text = meta['coordinates']
 
 
     location = SubElement(mods,'location')
@@ -137,7 +156,8 @@ def csv_row_to_mods(csv_row,csv_defs,dest,date):
     holdinginstitution.text = "University of Toronto Scarborough Library, Archives & Special Collections"
     source = SubElement(location,'physicalLocation')
     source.attrib['type'] = "source"
-    source.text = meta['source']
+    if("source" in meta):
+        source.text = meta['source']
     
     accesscondition = SubElement(mods,'accessCondition') # Rights
     accesscondition.text = "Digital files found on the Digital Scholarship Unit site are meant for research and private study used in compliance with copyright legislation. Access to digital images and text found on this website and the technical capacity to download or copy it does not imply permission to re-use. Prior written permission to publish, or otherwise use images and text found on the website must be obtained from copyright holder. Please contact holding institution for further information."
