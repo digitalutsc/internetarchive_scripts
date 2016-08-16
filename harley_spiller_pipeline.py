@@ -11,9 +11,9 @@ import sys
 
 # **************************
 
-downloaded_path = "testarchive/harley_spiller_downloaded/"
-preprocess_path = "testarchive/harley_spiller_preprocess/"
-processed_path = "testarchive/harley_spiller_processed/"
+downloaded_path ="/home/vagrant/internetarchive_scripts/testarchive/harley_spiller_downloaded/"
+preprocess_path ="/home/vagrant/internetarchive_scripts/testarchive/harley_spiller_preprocess/"
+processed_path = "/home/vagrant/internetarchive_scripts/testarchive/harley_spiller_processed/"
 tocpath = "TOC/"
 meta_data_path = "META/"
 
@@ -105,12 +105,13 @@ islandora_parent_pid = "islandora:test"
 
 # Run islandora batch preprocessing
 for col in new_collections:
-    subprocess.call(['drush','--v',islandora_user,'--root=/var/www/drupal','islandora_batch_preprocess','--target='+islandora_preprocess_path+"/"+col,'--namepsace='+islandora_namespace,'--parent='+islandora_parent_pid])
+    subprocess.call(['drush','--v','--user='+islandora_user,'--root=/var/www/drupal','islandora_compound_batch_preprocess','--target='+islandora_preprocess_path+col+"/",'--namespace='+islandora_namespace,'--parent='+islandora_parent_pid])
 
 # Ingest and grab PIDS
-ingest_output = subprocess.check_output(['drush','--v',islandora_user,'--root=/var/www/drupal','islandora_batch_ingest'])
+ingest_output = subprocess.check_output(['drush','--v','--user='+islandora_user,'--root=/var/www/drupal','islandora_batch_ingest'])
+ingest_output = ingest_output.split("\n")
 new_objects = []
-for line in ingest_output.split("\n"):
+for line in ingest_output:
     if("Ingested" in line):
         new_objects.append(line.split(" ")[1]) # TODO Check this actually does the thing we want it to
 
