@@ -8,25 +8,31 @@ import ia_getitems, ia_split, ia_redmine, ia_settings
 import subprocess
 import sys
 # **************************
+# READ IN VARIABLES
+# **************************
+config = {}
+with open("ia_config.txt") as f:
+    for line in f:
+       config[line.split("=")[0]] = line.split("=")[1] 
+
 
 # **************************
-
-downloaded_path ="/home/vagrant/internetarchive_scripts/testarchive/harley_spiller_downloaded/"
-preprocess_path ="/home/vagrant/internetarchive_scripts/testarchive/harley_spiller_preprocess/"
-processed_path = "/home/vagrant/internetarchive_scripts/testarchive/harley_spiller_processed/"
-tocpath = "TOC/"
-meta_data_path = "META/"
+downloaded_path =config['downloaded_path']
+preprocess_path =config['preprocess_path']
+processed_path =config['processed_path']
+tocpath =config['tocpath']
+meta_data_path =config['meta_data_path'] 
 
 # **************************
 # Download new files from redmine
 # **************************
-redmine_url = "https://digitalscholarship.utsc.utoronto.ca/redmine/"
-project_id = "kim-pham"
-redmine_name = "Caden Armstrong"
+redmine_url = config['redmine_url']
+project_id = config['project_id'] 
+redmine_name = config['redmine_name']
 
 print("Checking for metadata files")
 
-tickets = ia_redmine.get_assigned_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,'kim-pham',"Caden Armstrong")
+tickets = ia_redmine.get_assigned_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,project_id,redmine_name)
 ia_redmine.download_all_files(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,tickets,meta_data_path)
 ia_redmine.update_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,tickets,2) # Change to in progress
 ia_split.move_toc(meta_data_path,tocpath)
@@ -35,11 +41,12 @@ ia_split.move_toc(meta_data_path,tocpath)
 # CHECK FOR NEW COLLECTIONS
 # **************************
 
-collection_id = 'booksgrouptest' # The collection to watch
-collections_db = 'harley_spiller_collections.txt' # The text file containing the subcollection (scan boxs, books?) that have already been processed
+collection_id = config['collection_id'] # The collection to watch
+collections_db = config['collections_db'] # The text file containing the subcollection (scan boxs, books?) that have already been processed
 
+#TODO uncooment this
 #new_collections = ia_getitems.check_for_new_items(ia_settings.ia_username,ia_settings.ia_password,collection_id,collections_db)
-new_collections = ['spiller_006-1-4-3-21']
+new_collections = ['spiller_006-1-4-3-21'] # TODO get rid of this
 
 if (len(new_collections) == 0):
     # No new collections to process!
@@ -51,7 +58,7 @@ ia_split.new_folders(downloaded_path,new_collections) # Prep folders for the dow
 # DOWNLOAD COLLECTION
 # **************************
 print("Downloading collection")
-dry_run=False
+dry_run=bool(config['dry_run'])
 globs = ['*.tar','*scandata.xml']
 
 for col in new_collections:
@@ -98,10 +105,10 @@ for col in new_collections:
 # **************************
 # Islandora ingestion
 # **************************
-islandora_user = "admin"
+islandora_user = config['islandora_user']
 islandora_preprocess_path = processed_path
-islandora_namespace = "islandora"
-islandora_parent_pid = "islandora:test"
+islandora_namespace = config['islandora_namespace']
+islandora_parent_pid = config['islandora_parent_pid'] 
 
 # Run islandora batch preprocessing
 for col in new_collections:
@@ -126,13 +133,13 @@ for pid in new_objects:
 # Open redmine ticket
 # **************************
 
-issue_subject = "TEST Harley-Spiller Collection new items TEST"
-assign_to = "cadenarmstrong"
-issue_description = "The following items are new and have been processed:\n"
+issue_subject = config['issue_subject']
+assign_to = config['assign_to']
+issue_description = config['issue_description']
 for a in range(0,len(labels)):
     issue_description += "new ingested item:" +labels[a]+ "\n"
 #ia_redmine.create_redmine_issue(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,project_id,issue_subject,issue_description,assign_to)
-
+#TODO UNCOMMENT REDMINe ISSUE MAKING
 # **************************
 # SAVE COLLECTIONS TO DATABASE
 # **************************
