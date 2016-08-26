@@ -13,7 +13,7 @@ import sys
 config = {}
 with open("ia_config.txt") as f:
     for line in f:
-       config[line.split("=")[0]] = line.split("=")[1] 
+       config[line.split("=")[0]] = line.split("=")[1].rstrip("\n")
 
 
 # **************************
