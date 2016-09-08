@@ -85,6 +85,33 @@ def update_tickets(username,password,redmine_url,issues,statusid):
     for issue in issues:
         redmine.issue.update(issue.id,status_id=statusid)
 
+def get_pids(username,password,redmine_url,issue):
+    """username->(String) redmine username
+       password->(Stirng) redmine password
+       redmine_url->(String) url of redmine server
+       issue->(String) Issue to look in for the namespace
+
+       looks in the description of the given ticket for a line containing:
+
+        boxid=pid
+
+        ex.
+
+        006-1-2-3-4=spiller:XXX
+       (spaces get removed, and split on = )
+        
+       returns a dictionary of boxid,pids
+       """
+
+    redmine = Redmine(redmine_url,username=username,password=password) # connect to redmine
+    pids = {}
+    for issue in issues:
+        for line in issue.description.split("\n"):
+            if "=" in line:
+                line = line.replace(" ","")
+                pids[line.split("=")[0]] = line.split("=")[1]    
+    return pids
+        
 
 if __name__ == "__main__":
 

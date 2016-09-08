@@ -37,6 +37,22 @@ ia_redmine.download_all_files(ia_settings.redmine_username,ia_settings.redmine_p
 ia_redmine.update_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,tickets,2) # Change to in progress
 ia_split.move_toc(meta_data_path,tocpath)
 
+new_pids = ia_redmine.get_pids(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,tickets)
+
+pid_database = config['pid_db']
+old_pids = {}
+with open(pid_database) as f:
+    for line in f:
+        old_pids[line.split("=")[0]]=line.split("=")[1]
+
+old_pids.update(new_pids)
+
+with open(pid_database, "w") as f:
+    writestr = ""
+    for key,val in old_pids.items():
+        writestr += "%s=%s\n"%(key,val)
+    f.write(writestr)
+
 # **************************
 # CHECK FOR NEW COLLECTIONS
 # **************************
@@ -95,6 +111,15 @@ for col in new_collections:
 
 
 # **************************
+# Get pids for ingest location
+# **************************
+old_pids = {}
+with open(pid_database) as f:
+    for line in f:
+        old_pids[line.split("=")[0]]=line.split("=")[1]
+
+
+# **************************
 # Generate structure.xml
 # **************************
 print("ISLANDORA REQUIRED PART")
@@ -108,10 +133,10 @@ for col in new_collections:
 islandora_user = config['islandora_user']
 islandora_preprocess_path = processed_path
 islandora_namespace = config['islandora_namespace']
-islandora_parent_pid = config['islandora_parent_pid'] 
 
 # Run islandora batch preprocessing
 for col in new_collections:
+    islandora_parent_pid = old_pids[col.split("_")[1]]    
     subprocess.call(['drush','--v','--user='+islandora_user,'--root=/var/www/drupal','islandora_compound_batch_preprocess','--target='+islandora_preprocess_path+col+"/",'--namespace='+islandora_namespace,'--parent='+islandora_parent_pid])
 
 # Ingest and grab PIDS
