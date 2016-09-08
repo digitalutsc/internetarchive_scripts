@@ -111,7 +111,40 @@ def get_pids(username,password,redmine_url,issue):
                 line = line.replace(" ","")
                 pids[line.split("=")[0]] = line.split("=")[1]    
     return pids
-        
+
+def get_all_tickets(username,password,redmine_url,project_id,assignee):
+    """username->(Stirng) redmine username
+       password->(String) redmine password
+       redmine_url->(String) redmine server url
+       project_id->(Stirng) id of project to get tickets for
+       assignee->(String) name of assignee as appears on redmine (not the username)
+
+       return (list(redmine.issue))
+       returns a list of all the tickets currently assigned to the user"""
+
+    redmine = Redmine(redmine_url,username=username,password=password) # connect to redmine
+    proj = redmine.project.get(project_id)
+    issue_list = []
+    for issue in proj.issues:
+        if(issue.assigned_to['name'] == assignee): # Check assignee and issue status
+            issue_list.append(issue)
+    return(issue_list)
+
+def reassign_tickets(username,password,redmine_url,issues,assignee):
+    """username->(String) redmine username
+       password->(String) redmine password
+       redmine_url->(String) server address for redmine
+       issues->(list(redmine.issue)) list of redmine issues to change the status of
+       assignee->(int) person id to change the ticket to 
+       
+
+       changes the assignee to the given id number
+       """
+
+    redmine = Redmine(redmine_url,username=username,password=password) # connect to redmine
+
+    for issue in issues:
+        redmine.issue.update(issue.id,assigned_to_id=assignee)
 
 if __name__ == "__main__":
 

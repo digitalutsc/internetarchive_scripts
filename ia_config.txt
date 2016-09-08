@@ -15,3 +15,4 @@ issue_subject=TEST Harley-Spiller Collection new items TEST
 assign_to=cadenarmstrong
 pid_db=pid_db.txt
 issue_description=The following items are new and have been processed:
+qa_id=139

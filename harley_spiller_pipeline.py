@@ -155,14 +155,29 @@ for pid in new_objects:
 
 
 # **************************
+# Re assign ticket
+# **************************
+
+tickets = ia_redmine.get_all_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,project_id,redmine_name)
+for col in collections:
+    localid = col.split("_")[1]
+    for ticket in tickets:
+        if(localid in ticket.subject or localid in ticket.description):
+            ia_redmine.update_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,[ticket],4) # Change to feedback
+            ia_redmine.reassign_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,[ticket],config['qa_id') # Change to feedback to amanda's id
+    
+
+
+
+# **************************
 # Open redmine ticket
 # **************************
 
-issue_subject = config['issue_subject']
-assign_to = config['assign_to']
-issue_description = config['issue_description']
-for a in range(0,len(labels)):
-    issue_description += "new ingested item:" +labels[a]+ "\n"
+#issue_subject = config['issue_subject']
+#assign_to = config['assign_to']
+#issue_description = config['issue_description']
+#for a in range(0,len(labels)):
+#    issue_description += "new ingested item:" +labels[a]+ "\n"
 #ia_redmine.create_redmine_issue(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,project_id,issue_subject,issue_description,assign_to)
 #TODO UNCOMMENT REDMINe ISSUE MAKING
 # **************************
