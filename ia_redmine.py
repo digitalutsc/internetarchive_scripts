@@ -85,7 +85,7 @@ def update_tickets(username,password,redmine_url,issues,statusid):
     for issue in issues:
         redmine.issue.update(issue.id,status_id=statusid)
 
-def get_pids(username,password,redmine_url,issue):
+def get_pids(username,password,redmine_url,issues):
     """username->(String) redmine username
        password->(Stirng) redmine password
        redmine_url->(String) url of redmine server
@@ -154,12 +154,18 @@ if __name__ == "__main__":
     username = input("username:") # Redmine user info
     password = input("password:")
     redmine_url = "https://digitalscholarship.utsc.utoronto.ca/redmine" # Location of redmine 
-    
+    proj = 'harley-j-spiller-processing'
+
     redmine = Redmine(redmine_url,username=username,password=password) # connect to redmine
     redmine.auth()
-    test_proj = redmine.project.get('kim-pham')
+#    test_proj = redmine.project.get('')
 
-    tickets = get_assigned_tickets(username,password,redmine_url,'kim-pham',"Caden Armstrong")
+#tickets = get_assigned_tickets(username,password,redmine_url,'kim-pham',"Caden Armstrong")
+    tickets = get_assigned_tickets(username,password,redmine_url,proj,"Caden Armstrong")
+    pids = get_pids(username,password,redmine_url,tickets)
+    print(pids)
+    reassign_tickets(username,password,redmine_url,tickets,139)
+    update_tickets(username,password,redmine_url,tickets,4)
 #download_all_files(username,password,redmine_url,tickets,"/Users/armst179/workspace/internetarchive_scripts/TOC/")
 #    update_tickets(username,password,redmine_url,tickets,1)
 
