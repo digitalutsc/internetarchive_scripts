@@ -126,7 +126,7 @@ def make_folder_into_compound(folder,destination,scandata,toc,metapath,ext=".jp2
 
     for a in range(0,len(leafNums)):
         identifier = identifiers[a]
-        folders = create_dest_folders(destination+"/"+identifier+"/",0,len(leafNums[a]),padding) # Create dest folders
+        folders = create_dest_folders(destination+"/"+identifier+"/"+identifier+"_child_",0,len(leafNums[a]),padding) # Create dest folders
 
         for b in range(0,len(folders)):
             move_file(files[leafNums[a][b]],folders[b]+"/OBJ.jp2") # Move and rename the files into their respective folder
