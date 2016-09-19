@@ -107,9 +107,11 @@ def csv_row_to_mods(csv_row,csv_defs,dest,date):
     language.text = meta['language']
 
     subject = SubElement(mods,'subject')
-    topic = SubElement(subject,'topic')
-    topic.attrib['authority'] = "lcsh"
-    topic.text = meta['topic']
+    for topictext in meta['topic'].split(" | ")
+        topic = SubElement(subject,'topic')
+        topic.attrib['authority'] = "lcsh"
+        topic.text = topictext
+
     geographic = SubElement(subject,'geographic') # TODO blank?
     temporal = SubElement(subject,'temporal') # TODO blank?
     hierarchicalgeographic = SubElement(subject,'hierarchicalGeographic')
