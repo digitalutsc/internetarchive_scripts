@@ -122,7 +122,6 @@ def make_folder_into_compound(folder,destination,scandata,toc,metapath,ext=".jp2
     for entry in toc:
         if len(entry) > 1:
             identifiers.append(entry)
-            
 
     for a in range(0,len(leafNums)):
         identifier = identifiers[a]
@@ -181,7 +180,8 @@ def generate_mods(metapath,identifier,dest,date):
             else:
                 if(identifier in row):
                     csv_to_mods.csv_row_to_mods(row,key,dest,date)
-
+                    return 
+    
 def get_toc(path,boxid):
     """path->(String) path to directory containing table of contents
        boxid->(String) box id for group of scans (also filename of TOC file)
@@ -230,7 +230,6 @@ if __name__ == "__main__":
 #print(find_mods("MODS/",""))
 
 #print scandata_leafnums("spiller_006-1-4-3-21_scandata.xml")
-    print(scan_date("spiller_006-1-4-3-21_scandata.xml"))
 
     pass
     
