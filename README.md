@@ -24,3 +24,8 @@ A collection of scripts to process the Harley-Spiller collection after being sca
 9. Capture ingested item information (Currently unused)
 10. Update redmine tickets for QA
 11. Clean up working directories
+
+## ia_settings.py
+To get git to ignore this file use the following command
+
+```git update-index --assume-unchanged ia_settings.py```
