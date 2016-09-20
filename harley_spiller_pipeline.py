@@ -123,6 +123,7 @@ with open(pid_database) as f:
 # Generate structure.xml
 # **************************
 print("ISLANDORA REQUIRED PART")
+print("Creating structure files")
 
 for col in new_collections:
     subprocess.call(['php','create_structure_files.php',processed_path+"/"+col]) #TODO double check this is at the right level
@@ -135,12 +136,14 @@ islandora_preprocess_path = processed_path
 islandora_namespace = config['islandora_namespace']
 
 # Run islandora batch preprocessing
+print("Running preprocessing")
 for col in new_collections:
     islandora_parent_pid = old_pids[col.split("_")[1]]    
-    subprocess.call(['drush','--v','--user='+islandora_user,'--root=/var/www/drupal','islandora_compound_batch_preprocess','--target='+islandora_preprocess_path+col+"/",'--namespace='+islandora_namespace,'--parent='+islandora_parent_pid])
+    subprocess.call(['drush','-v','--user='+islandora_user,'--root=/var/www/drupal','islandora_compound_batch_preprocess','--target='+islandora_preprocess_path+col+"/",'--namespace='+islandora_namespace,'--parent='+islandora_parent_pid])
 
 # Ingest and grab PIDS
-ingest_output = subprocess.check_output(['drush','--v','--user='+islandora_user,'--root=/var/www/drupal','islandora_batch_ingest'])
+print("Running Ingest")
+ingest_output = subprocess.call(['drush','--v','--user='+islandora_user,'--root=/var/www/drupal','islandora_batch_ingest'])
 
 # THIS PART GETS LABELS FROM PIDS?
 #ingest_output = ingest_output.split("\n")
