@@ -3,8 +3,38 @@ from xml.etree.ElementTree import SubElement, Element
 import csv
 import codecs
 
-def csv_row_to_mods(csv_row,csv_defs,dest):
-    """ Create a mods file from a csv row (already processed in lists) """
+def csv_row_to_mods(csv_row,csv_defs,dest,date):
+    """csv_row->List(String) a single row read in from a csv reader
+       csv_defs->List(String) the first row from a csv file to give the dict keys
+       dest->(String) Path to folder where MODS.xml will be saved
+       date->(Stirng) DateCaptured YYYY-MM-DD from scandata
+
+       the following keys are currently in use:
+        title
+        role
+        dateCaptured
+        dateQualifier
+        dateCreated
+        noteOnDateCreated
+        description
+        identifierLocal
+        form
+        extent
+        note
+        language
+        topic
+        continent
+        country
+        province
+        state
+        county
+        city
+        coordinates
+        source
+
+        The keys from the csv file are checked to exist before setting the data, because some meta data won't always be there.
+        
+        Create a mods file from a csv row (already processed in lists) """
 
     meta = dict(zip(csv_defs,csv_row))
 
@@ -39,18 +69,18 @@ def csv_row_to_mods(csv_row,csv_defs,dest):
     typeofresource.text = "text"
 
     genre = SubElement(mods,'genre')
-    genre.text = "textual record"
+    genre.text = "menu"
 
     origininfo = SubElement(mods,'originInfo')
     datecaptured = SubElement(origininfo,'dateCaptured')
-    datecaptured.text = meta['dateCaptured']
+    datecaptured.text = date
     datecreated = SubElement(origininfo, 'dateCreated')
     datecreated.attrib['qualifier'] = meta['dateQualifier']
     datecreated.text = meta['dateCreated']
 
     datenote = SubElement(mods,'note')
     datenote.attrib['ID'] = "datenote"
-    datenote.text = meta['noteOnDateCreated']
+    datenote.text = meta['dateNote']
 
     description = SubElement(mods,'abstract')
     description.text = meta['description']
@@ -74,12 +104,14 @@ def csv_row_to_mods(csv_row,csv_defs,dest):
     languageterm = SubElement(mods,'languageTerm')
     languageterm.attrib['authority'] = "iso639-2b"
     languageterm.attrib['type'] = "code"
-    languageterm.text = meta['language']
+    language.text = meta['language']
 
     subject = SubElement(mods,'subject')
-    topic = SubElement(subject,'topic')
-    topic.attrib['authority'] = "lcsh"
-    topic.text = meta['topic']
+    for topictext in meta['topic'].split(" | "):
+        topic = SubElement(subject,'topic')
+        topic.attrib['authority'] = "lcsh"
+        topic.text = topictext
+
     geographic = SubElement(subject,'geographic') # TODO blank?
     temporal = SubElement(subject,'temporal') # TODO blank?
     hierarchicalgeographic = SubElement(subject,'hierarchicalGeographic')
@@ -91,11 +123,12 @@ def csv_row_to_mods(csv_row,csv_defs,dest):
     province.text = meta['province']
     state = SubElement(hierarchicalgeographic,'state')
     state.text = meta['state']
-    region = SubElement(hierarchicalgeographic,'region') #TODO blank?
-    county = SubElement(hierarchicalgeographic,'county') #TODO blank?
-    city = SubElement(hierarchicalgeographic,'city') #TODO blank?
+    region = SubElement(hierarchicalgeographic,'region') 
+    county = SubElement(hierarchicalgeographic,'county') 
+    county.text = meta['county'] 
+    city = SubElement(hierarchicalgeographic,'city') 
     city.text = meta['city'] 
-    citysection= SubElement(hierarchicalgeographic,'citySection') #TODO blank?
+    citysection= SubElement(hierarchicalgeographic,'citySection') 
     cartographics = SubElement(subject,'cartographics')
     coordinates = SubElement(cartographics,'coordinates')
     coordinates.text = meta['coordinates']
@@ -110,7 +143,7 @@ def csv_row_to_mods(csv_row,csv_defs,dest):
     source.text = meta['source']
     
     accesscondition = SubElement(mods,'accessCondition') # Rights
-    accesscondition.text = "Digital files found on the Digital Scholarship Unit site are meant for research and private study used in compliance with copyright legislation. Access to digital images and text found on this website and the technical capacity to download or copy it does not imply permission to re-use. Prior written permission to publish, or otherwise use images and text found on the website must be obtained from copyright holder. Please contact holding institution for further information."
+    accesscondition.text = "Digital files found on the Digital Scholarship Unit site are meant for research and private study used in compliance with copyright legislation. Access to digital images and text found on this website and the technical capacity to download or copy it does not imply permission to re-use. Prior written permission to publish, or otherwise use images and text found on the website must be obtained from the copyright holder. Please contact UTSC Library, Archives & Special Collections for further information."
 
 
     tree = ET.ElementTree(mods)

@@ -8,22 +8,61 @@ import ia_getitems, ia_split, ia_redmine, ia_settings
 import subprocess
 import sys
 # **************************
+# READ IN VARIABLES
+# **************************
+config = {}
+with open("ia_config.txt") as f:
+    for line in f:
+       config[line.split("=")[0]] = line.split("=")[1].rstrip("\n")
+
 
 # **************************
+downloaded_path =config['downloaded_path']
+preprocess_path =config['preprocess_path']
+processed_path =config['processed_path']
+tocpath =config['tocpath']
+meta_data_path =config['meta_data_path'] 
 
-downloaded_path = "testarchive/harley_spiller_downloaded/"
-preprocess_path = "testarchive/harley_spiller_preprocess/"
-processed_path = "testarchive/harley_spiller_processed/"
+# **************************
+# Download new files from redmine
+# **************************
+redmine_url = config['redmine_url']
+project_id = config['project_id'] 
+redmine_name = config['redmine_name']
+
+print("Checking for metadata files")
+
+tickets = ia_redmine.get_assigned_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,project_id,redmine_name)
+ia_redmine.download_all_files(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,tickets,meta_data_path)
+ia_redmine.update_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,tickets,2) # Change to in progress
+ia_split.move_toc(meta_data_path,tocpath)
+
+new_pids = ia_redmine.get_pids(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,tickets)
+
+pid_database = config['pid_db']
+old_pids = {}
+with open(pid_database) as f:
+    for line in f:
+        old_pids[line.split("=")[0]]=line.split("=")[1].lstrip("\n")
+
+old_pids.update(new_pids)
+
+with open(pid_database, "w") as f:
+    writestr = ""
+    for key,val in old_pids.items():
+        writestr += "%s=%s"%(key,val.lstrip("\n"))
+    f.write(writestr)
 
 # **************************
 # CHECK FOR NEW COLLECTIONS
 # **************************
 
-collection_id = 'booksgrouptest' # The collection to watch
-collections_db = 'harley_spiller_collections.txt' # The text file containing the subcollection (scan boxs, books?) that have already been processed
+collection_id = config['collection_id'] # The collection to watch
+collections_db = config['collections_db'] # The text file containing the subcollection (scan boxs, books?) that have already been processed
 
+#TODO uncooment this
 #new_collections = ia_getitems.check_for_new_items(ia_settings.ia_username,ia_settings.ia_password,collection_id,collections_db)
-new_collections = ['spiller_006-1-4-3-21']
+new_collections = ['spiller_006-1-4-3-21'] # TODO get rid of this
 
 if (len(new_collections) == 0):
     # No new collections to process!
@@ -34,8 +73,8 @@ ia_split.new_folders(downloaded_path,new_collections) # Prep folders for the dow
 # **************************
 # DOWNLOAD COLLECTION
 # **************************
-
-dry_run=False
+print("Downloading collection")
+dry_run=bool(config['dry_run'])
 globs = ['*.tar','*scandata.xml']
 
 for col in new_collections:
@@ -46,33 +85,45 @@ for col in new_collections:
 # UNTAR the jp2 archive
 # **************************
 
-tocfile = "_scandata.xml" 
+print("Untar step")
+scandatafile = "_scandata.xml" 
 
 ia_split.new_folders(preprocess_path,new_collections) # New folders to uncompress into
 
 for col in new_collections:
     tarfile_name = ia_split.get_tarname(downloaded_path+"/"+col)
     ia_split.untarball(tarfile_name,preprocess_path + col)
-    ia_split.move_file(downloaded_path+"/"+col+"/"+col+tocfile,preprocess_path+"/"+col+"/"+col+tocfile)
+    ia_split.move_file(downloaded_path+"/"+col+"/"+col+scandatafile,preprocess_path+"/"+col+"/"+col+scandatafile)
 
 # **************************
 # Split the archive into multiple folders and move the jp2 files
 # Also generate the MODS files
 # **************************
 
-tocpath = "TOC/"
+print("Splitting folders and moving files")
 
 ia_split.new_folders(processed_path,new_collections) # New folders to uncompress into
 for col in new_collections:
     toc = ia_split.get_toc(tocpath,col.split("_")[1])
     tarfile_name = ia_split.get_tarname(downloaded_path+"/"+col).split("/")[-1]
-    scandata = ia_split.get_scandata(downloaded_path+"/"+col)
-    ia_split.make_folder_into_compound(preprocess_path+"/"+col+"/"+tarfile_name.rstrip(".tar"),processed_path+"/"+col,scandata,toc) 
+    scandata = ia_split.get_scandata(preprocess_path+"/"+col)
+    ia_split.make_folder_into_compound(preprocess_path+"/"+col+"/"+tarfile_name.rstrip(".tar"),processed_path+"/"+col,scandata,toc,meta_data_path) 
+
+
+# **************************
+# Get pids for ingest location
+# **************************
+old_pids = {}
+with open(pid_database) as f:
+    for line in f:
+        old_pids[line.split("=")[0]]=line.split("=")[1]
 
 
 # **************************
 # Generate structure.xml
 # **************************
+print("ISLANDORA REQUIRED PART")
+print("Creating structure files")
 
 for col in new_collections:
     subprocess.call(['php','create_structure_files.php',processed_path+"/"+col]) #TODO double check this is at the right level
@@ -80,42 +131,59 @@ for col in new_collections:
 # **************************
 # Islandora ingestion
 # **************************
-islandora_user = "admin"
+islandora_user = config['islandora_user']
 islandora_preprocess_path = processed_path
-islandora_namespace = "islandora"
-islandora_parent_pid = "islandora:test"
+islandora_namespace = config['islandora_namespace']
 
 # Run islandora batch preprocessing
-subprocess.call(['drush','--v',islandora_user,'--root=/var/www/drupal','islandora_batch_preprocess','--target='+islandora_preprocess_path,'--namepsace='+islandora_namespace,'--parent='+islandora_parent_pid])
+print("Running preprocessing")
+for col in new_collections:
+    islandora_parent_pid = old_pids[col.split("_")[1]]    
+    subprocess.call(['drush','-v','--user='+islandora_user,'--root=/var/www/drupal','islandora_compound_batch_preprocess','--target='+islandora_preprocess_path+col+"/",'--namespace='+islandora_namespace,'--parent='+islandora_parent_pid])
 
 # Ingest and grab PIDS
-ingest_output = subprocess.check_output(['drush','--v',islandora_user,'--root=/var/www/drupal','islandora_batch_ingest'])
-new_objects = []
-for line in ingest_output.split("\n"):
-    if("Ingested" in line):
-        new_objects.append(line.split(" ")[1]) # TODO Check this actually does the thing we want it to
+print("Running Ingest")
+ingest_output = subprocess.call(['drush','--v','--user='+islandora_user,'--root=/var/www/drupal','islandora_batch_ingest'])
 
-# Get islandora labels for associated PID
-labels = []
-for pid in new_objects:
-    new_label = subprocess.check_output(['./islandora_get_label.drush',pid,'--root=/var/www/drupal'])
-    labels.append(new_label.lstrip(".\n"))
+# THIS PART GETS LABELS FROM PIDS?
+#ingest_output = ingest_output.split("\n")
+#new_objects = []
+#for line in ingest_output:
+#    if("Ingested" in line):
+#        new_objects.append(line.split(" ")[1]) # TODO Check this actually does the thing we want it to
+#
+## Get islandora labels for associated PID
+#labels = []
+#for pid in new_objects:
+#    new_label = subprocess.check_output(['./islandora_get_label.drush',pid,'--root=/var/www/drupal'])
+#    labels.append(new_label.lstrip(".\n"))
 
 
 # **************************
-# Open redmine ticket
+# Re assign ticket
 # **************************
 
-redmine_url = "https://digitalscholarship.utsc.utoronto.ca/redmine/"
-#project_id = "digital-collections-working-group"
-project_id = "kim-pham"
-issue_subject = "TEST Harley-Spiller Collection new items TEST"
-assign_to = "cadenarmstrong"
-issue_description = "The following items are new and have been processed:\n"
-for a in range(0,len(labels)):
-    issue_description += "new ingested item:" +labels[a]+ "\n"
+tickets = ia_redmine.get_all_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,project_id,redmine_name)
+for col in new_collections:
+    localid = col.split("_")[1]
+    for ticket in tickets:
+        if(localid in ticket.subject or localid in ticket.description):
+            ia_redmine.update_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,[ticket],4) # Change to feedback
+            ia_redmine.reassign_tickets(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,[ticket],config['qa_id']) # Change to feedback to amanda's id
+    
+
+
+
+# **************************
+# Open redmine ticket ( UNUSED)
+# **************************
+
+#issue_subject = config['issue_subject']
+#assign_to = config['assign_to']
+#issue_description = config['issue_description']
+#for a in range(0,len(labels)):
+#    issue_description += "new ingested item:" +labels[a]+ "\n"
 #ia_redmine.create_redmine_issue(ia_settings.redmine_username,ia_settings.redmine_password,redmine_url,project_id,issue_subject,issue_description,assign_to)
-
 # **************************
 # SAVE COLLECTIONS TO DATABASE
 # **************************

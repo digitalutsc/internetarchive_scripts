@@ -3,6 +3,8 @@ import glob                             # To get lists of files from folders
 from subprocess import call             # To tar and untar files
 import shutil
 import csv_to_mods
+import csv
+import codecs
 
 def move_file(orig,dest):
     """ orgi->(string) path of the file to move
@@ -28,7 +30,7 @@ def untarball(tarfile, dest):
        The dest path will be created if it does not exist."""
 
     call(['mkdir','-p',dest])
-    call(['tar','-xzf',tarfile,"-C",dest])
+    call(['tar','-xvf',tarfile,"-C",dest])
 
 def get_tarname(path):
     """path->(String) directory path 
@@ -43,6 +45,15 @@ def get_scandata(path):
         Gets the full pathof a file *scandata.xml in the directory"""
 
     return glob.glob(path+"/*scandata.xml")[0]
+
+def move_toc(start,finish):
+    """start->(String) path to starting directory with TOC files to move out
+       finish->(String) path to put TOC files in
+
+       move all of the TOC files from a folder to another fold"""
+
+    for f in glob.glob(start+"*TOC*"):
+        move_file(f,finish+f.split("/")[-1])
 
 def create_dest_folders(name,range_start,range_end,padding):
     """name->(String) full path of folders to create minus the numbering
@@ -64,6 +75,15 @@ def create_dest_folders(name,range_start,range_end,padding):
         folders.append(name+number_format%(a))
     return folders
 
+def new_folders(dest,names):
+    """dest->(String) destination folder for the new folders to reside in
+       names->(list(string)) list of folder names to make
+
+       create a bunch of directories in dest using names"""
+
+    for name in names:
+       call(['mkdir','-p',dest+"/"+name]) 
+
 def create_mods_file(xmltree,folder):
     """xmltree->(ElementTree) modsfile element tree
        folder->(String) path to folder where MODS file will be written
@@ -77,7 +97,7 @@ def create_mods_file(xmltree,folder):
     else:
         xmltree.write(folder+"/MODS.xml")
 
-def make_folder_into_compound(folder,destination,scandata,toc,ext=".jp2"):
+def make_folder_into_compound(folder,destination,scandata,toc,metapath,ext=".jp2"):
     """folder->(String) path to folder containing files to make into compounds
        destination->(String) path to folder where compounds will be made
        scandata->(String) path to scandata file containing leaf nums and menu splitting
@@ -93,23 +113,27 @@ def make_folder_into_compound(folder,destination,scandata,toc,ext=".jp2"):
         """
 
     files = glob.glob(folder+"/*"+ext) # Get list of files of the specified type in the folder
+    files.sort()
     padding = len(str(len(files))) # This makes sure that they will be ordered
 
     leafNums = scandata_leafnums(scandata)
+
+    print(leafNums)
+    date = scan_date(scandata)
     
     identifiers = []
-    with open(toc) as f:
-        for line in f:
-            identifiers.append(line.rstrip("\n"))
+    for entry in toc:
+        if len(entry) > 1:
+            identifiers.append(entry)
 
     for a in range(0,len(leafNums)):
         identifier = identifiers[a]
-        folders = create_dest_folders(destination+"/"+identifier+"/",0,len(leafNums[a]),padding) # Create dest folders
+        folders = create_dest_folders(destination+"/"+identifier+"/"+identifier+"_child_",0,len(leafNums[a]),padding) # Create dest folders
 
         for b in range(0,len(folders)):
             move_file(files[leafNums[a][b]],folders[b]+"/OBJ.jp2") # Move and rename the files into their respective folder
-            modfile = generate_mods(metapath,identifier,folders[b]+"/MODS.xml")
-        copy_file(folders[0]+"/MODS.xml",destionation+"/"+identifier+"/MODS.xml")
+            modfile = generate_mods(metapath,identifier,folders[b]+"/MODS.xml",date)
+        copy_file(folders[0]+"/MODS.xml",destination+"/"+identifier+"/MODS.xml")
 
 def scandata_leafnums(scandata):
     """scandata->(String) path to scandata file 
@@ -141,14 +165,15 @@ def copy_file(start,finish):
 
     shutil.copy(start,finish) 
 
-def generate_mods(metapath,identifier,dest):
+def generate_mods(metapath,identifier,dest,date):
     """metapath->(String) path to directory contating meta data files
        indentifier->(String) Identifier to be made into a mod file
        dest->(String) Destination path of folder for MODS.xml file to be put into
+       date->(String) Scan date for batch
 
        generate a MODS.xml file from a csv meta data file for a given identifier"""
 
-    files = glob.glob(metapath+"*.xml") # Get list of files in the directory given
+    files = glob.glob(metapath+"*.csv") # Get list of files in the directory given
     for f in files: # lets look at the all the files
         key = []
         reader = csv.reader(codecs.open(f,encoding="utf-8"))
@@ -157,8 +182,9 @@ def generate_mods(metapath,identifier,dest):
                 key = row
             else:
                 if(identifier in row):
-                    csv_to_mods.csv_row_to_mods(row,key,dest)
-
+                    csv_to_mods.csv_row_to_mods(row,key,dest,date)
+                    return 
+    
 def get_toc(path,boxid):
     """path->(String) path to directory containing table of contents
        boxid->(String) box id for group of scans (also filename of TOC file)
@@ -166,11 +192,26 @@ def get_toc(path,boxid):
        returns list of identifiers for the given box""" 
     
     toc = []
-    with open(path+"/"+boxid+".txt") as f:
+    path = path.rstrip("/")
+    with open(path+"/"+boxid+"_TOC.txt") as f:
         for line in f:
             toc.append(line.rstrip("\n"))
     return toc
 
+def scan_date(scandata):
+    """scandata->(String) path to scandata file
+
+       YYYY-MM-DD
+       returns a string of the date from the scandata file"""
+
+
+    tree = ET.parse(scandata)
+    root = tree.getroot()
+    for item in root.iter('scanLog'): 
+        scanevent = item.find("scanEvent")
+        endTimeStamp = scanevent.find("endTimeStamp")
+        date = endTimeStamp.text
+        return("%s-%s-%s"%(date[:4],date[4:6],date[6:8]))
 
 if __name__ == "__main__":
     
@@ -191,7 +232,7 @@ if __name__ == "__main__":
 
 #print(find_mods("MODS/",""))
 
-    print scandata_leafnums("spiller_006-1-4-3-21_scandata.xml")
+#print scandata_leafnums("spiller_006-1-4-3-21_scandata.xml")
 
     pass
     
