@@ -113,9 +113,12 @@ def make_folder_into_compound(folder,destination,scandata,toc,metapath,ext=".jp2
         """
 
     files = glob.glob(folder+"/*"+ext) # Get list of files of the specified type in the folder
+    files.sort()
     padding = len(str(len(files))) # This makes sure that they will be ordered
 
     leafNums = scandata_leafnums(scandata)
+
+    print(leafNums)
     date = scan_date(scandata)
     
     identifiers = []
